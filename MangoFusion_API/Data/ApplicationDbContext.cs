@@ -11,4 +11,5 @@ namespace MangoFusion_API.Data
         {
 
         }
+    }
 }
