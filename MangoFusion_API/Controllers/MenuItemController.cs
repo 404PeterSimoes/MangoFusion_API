@@ -14,10 +14,11 @@ namespace MangoFusion_API.Controllers
         private readonly ApplicationDbContext _db;
         private readonly ApiResponse _response;
         private readonly IWebHostEnvironment _env;
-        public MenuItemController(ApplicationDbContext db)
+        public MenuItemController(ApplicationDbContext db, IWebHostEnvironment env)
         {
             _db = db;
             _response = new ApiResponse();
+            _env = env;
         }
 
         [HttpGet]
