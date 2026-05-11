@@ -1,10 +1,13 @@
 ﻿using MangoFusion_API.Models;
 using MangoFusion_API.Models.Dto;
+using MangoFusion_API.Utility;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MangoFusion_API.Controllers
 {
+    [ApiController]
+    [Route("api/[controller]")]
     public class AuthController : Controller
     {
         private readonly ApiResponse _response;
@@ -21,7 +24,7 @@ namespace MangoFusion_API.Controllers
         }
 
         [HttpPost("register")]
-        public async Task <IActionResult> Register([FromBody] RegisterRequestDTO model)
+        public async Task<IActionResult> Register([FromBody] RegisterRequestDTO model)
         {
             if (ModelState.IsValid)
             {
@@ -34,8 +37,23 @@ namespace MangoFusion_API.Controllers
                 };
 
                 var result = await _userManager.CreateAsync(newUser, model.Password);
-                if(result.Succeeded)
+                if (result.Succeeded)
                 {
+                    if (!_roleManager.RoleExistsAsync(SD.Role_Admin).GetAwaiter().GetResult())
+                    {
+                        await _roleManager.CreateAsync(new IdentityRole(SD.Role_Admin));
+                        await _roleManager.CreateAsync(new IdentityRole(SD.Role_Customer));
+                    }
+
+                    if (model.Role.Equals(SD.Role_Admin, StringComparison.CurrentCultureIgnoreCase))
+                        {
+                        await _userManager.AddToRoleAsync(newUser, SD.Role_Admin);
+                    }
+                    else
+                    {
+                        await _userManager.AddToRoleAsync(newUser, SD.Role_Customer);
+                    }
+
                     _response.StatusCode = System.Net.HttpStatusCode.OK;
                     _response.IsSuccess = true;
                     return Ok(_response);
@@ -46,7 +64,7 @@ namespace MangoFusion_API.Controllers
                     {
                         _response.ErrorMessages.Add(error.Description);
                     }
-                    _response.StatusCode=System.Net.HttpStatusCode.BadRequest;
+                    _response.StatusCode = System.Net.HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     return BadRequest(_response);
                 }
