@@ -1,11 +1,15 @@
 ﻿using MangoFusion_API.Data;
 using MangoFusion_API.Models;
+using MangoFusion_API.Models.Dto;
+using MangoFusion_API.Utility;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Net;
 
 namespace MangoFusion_API.Controllers
 {
+    [Route("api/[controller]")]
+    [ApiController]
     public class OrderController : Controller
     {
         private readonly ApplicationDbContext _db;
@@ -62,5 +66,63 @@ namespace MangoFusion_API.Controllers
 
             return Ok(_response);
         }
+
+        [HttpPost]
+        public ActionResult<ApiResponse> CreateOrder([FromBody] OrderHeaderCreateDTO orderHeaderDto)
+        {
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    OrderHeader orderHeader = new()
+                    {
+                        PickUpName = orderHeaderDto.PickUpName,
+                        PickUpPhoneNumber = orderHeaderDto.PickUpPhoneNumber,
+                        PickUpEmail = orderHeaderDto.PickUpEmail,
+                        OrderDate = DateTime.Now,
+                        OrderTotal = orderHeaderDto.OrderTotal,
+                        Status = SD.status_confirmed,
+                        TotalItems = orderHeaderDto.TotalItems,
+                        ApplicationUserId = orderHeaderDto.ApplicationUserId
+                    };
+
+                    _db.OrderHeaders.Add(orderHeader);
+                    _db.SaveChanges();
+
+
+                    foreach(var orderDetailsDto in orderHeaderDto.OrderDetailsDTO)
+                    {
+                        OrderDetail orderDetail = new()
+                        {
+                            OrderHeaderId = orderHeader.OrderHeaderId,
+                            MenuItemId = orderDetailsDto.MenuItemId,
+                            Quantity = orderDetailsDto.Quantity,
+                            ItemName = orderDetailsDto.ItemName,
+                            Price = orderDetailsDto.Price
+                        };
+                        _db.OrderDetails.Add(orderDetail);
+                    }
+                    _db.SaveChanges();
+                    _response.Result = orderHeader;
+                    orderHeader.OrderDetails = [];
+                    _response.StatusCode = HttpStatusCode.Created;
+                    return CreatedAtAction(nameof(GetOrder), new { orderId = orderHeader.OrderHeaderId }, _response);
+                }
+                else
+                {
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.ErrorMessages = ModelState.Values.SelectMany(u => u.Errors).Select(u => u.ErrorMessage).ToList();
+                    return BadRequest(_response);
+                }
+            }
+            catch (Exception ex)
+            { 
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError; // Or Badrequest
+                _response.ErrorMessages.Add(ex.Message);
+                return StatusCode((int)HttpStatusCode.InternalServerError, _response);
+            }
+ }
     }
 }
