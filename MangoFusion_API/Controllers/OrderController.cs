@@ -132,6 +132,14 @@ namespace MangoFusion_API.Controllers
             {
                 if (ModelState.IsValid)
                 {
+                    if (orderId != orderHeaderDto.OrderHeaderId)
+                    {
+                        _response.IsSuccess = false;
+                        _response.StatusCode = HttpStatusCode.BadRequest;
+                        _response.ErrorMessages.Add("Invalid ID");
+                        return BadRequest(_response);
+                    }
+
                     OrderHeader? orderHeaderFromDb = _db.OrderHeaders.FirstOrDefault(u => u.OrderHeaderId == orderId);
 
                     if (orderHeaderFromDb == null)
@@ -157,13 +165,13 @@ namespace MangoFusion_API.Controllers
                     if (!string.IsNullOrEmpty(orderHeaderDto.Status))
                     {
                         if (orderHeaderFromDb.Status.Equals(SD.status_confirmed, StringComparison.InvariantCultureIgnoreCase)
-                            && orderHeaderDto.Status.Equals(SD.status_readyForPickup, StringComparison.InvariantCultureIgnoreCase)
+                            && orderHeaderDto.Status.Equals(SD.status_readyForPickup, StringComparison.InvariantCultureIgnoreCase))
                             {
                             orderHeaderFromDb.Status = SD.status_readyForPickup;
                         }
 
                         if (orderHeaderFromDb.Status.Equals(SD.status_readyForPickup, StringComparison.InvariantCultureIgnoreCase)
-                            && orderHeaderDto.Status.Equals(SD.status_completed, StringComparison.InvariantCultureIgnoreCase)
+                            && orderHeaderDto.Status.Equals(SD.status_completed, StringComparison.InvariantCultureIgnoreCase))
                             {
                             orderHeaderFromDb.Status = SD.status_completed;
                         }
