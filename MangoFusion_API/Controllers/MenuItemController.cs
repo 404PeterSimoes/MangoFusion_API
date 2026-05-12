@@ -51,7 +51,7 @@ namespace MangoFusion_API.Controllers
             }
             MenuItem? menuItem = _db.MenuItems.FirstOrDefault(u => u.Id == id);
 
-            List<OrderDetail> orderDetailsWithRatings = _db.OrderDetails.Where(u => u.Rating != null && u.MenuItemId == menuItem.Id).ToList();
+            List<OrderDetail> orderDetailsWithRatings = _db.OrderDetails.Where(od => od.Rating != null && od.MenuItemId == menuItem.Id).ToList();
 
             var ratings = orderDetailsWithRatings.Select(u => u.Rating.Value);
             double avgRating = ratings.Any() ? ratings.Average() : 0;
@@ -131,17 +131,20 @@ namespace MangoFusion_API.Controllers
 
         // ----------------------------------------------------------------------------
 
-        [HttpPut]
+        // é aquiiii
+        [HttpPut("{id:int}")]
         public async Task<ActionResult<ApiResponse>> UpdateMenuItem(int id, [FromForm] MenuItemUpdateDTO menuItemUpdateDTO)
         {
             try
             {
                 if (ModelState.IsValid)
                 {
-                    if (menuItemUpdateDTO.File == null || menuItemUpdateDTO.Id != id)
+                    /////////////////// aqui
+                    if (menuItemUpdateDTO == null || menuItemUpdateDTO.Id != id)
                     {
                         _response.IsSuccess = false;
                         _response.StatusCode = HttpStatusCode.BadRequest;
+                        _response.ErrorMessages = ["é aqui."];
                         return BadRequest(_response);
                     }
 

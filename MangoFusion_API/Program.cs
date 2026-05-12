@@ -58,6 +58,9 @@ app.UseDefaultFiles();
 app.UseStaticFiles();
 app.UseHttpsRedirection();
 
+// Allow the API to be consumed from any endpoint, "including the frontend application"
+app.UseCors(o => o.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().WithExposedHeaders("*"));
+
 app.UseAuthentication();
 app.UseAuthorization();
 
